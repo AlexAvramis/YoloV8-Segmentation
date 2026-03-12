@@ -46,6 +46,8 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+**Note:** YOLOv8 models are automatically downloaded on first use and cached in `~/.cache/ultralytics/` 
+
 ### 5. (Optional) Install CUDA-enabled PyTorch
 
 For CUDA 12.4 (compatible with CUDA 13.2):

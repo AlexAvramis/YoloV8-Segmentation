@@ -47,6 +47,7 @@ lightning_logs/
 # Cache
 .cache/
 *.cache
+.cache/
 
 # Logs
 *.log

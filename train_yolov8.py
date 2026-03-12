@@ -1,4 +1,4 @@
-from ultralytics import YOLO
+from ultralytics import YOLO, settings
 import torch
 import os
 from pathlib import Path
@@ -17,6 +17,11 @@ def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_
     # Check if CUDA is available
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
+
+    # Configure Ultralytics to use a proper cache directory
+    cache_dir = Path.home() / '.cache' / 'ultralytics'
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    settings.update({'weights_dir': str(cache_dir)})
 
     # Load model
     model_name = f'yolov8{model_size}-seg.pt'
@@ -72,6 +77,11 @@ def validate_model(model_path, data_yaml_path):
         model_path (str): Path to trained model weights
         data_yaml_path (str): Path to data.yaml file
     """
+    # Configure Ultralytics cache directory
+    cache_dir = Path.home() / '.cache' / 'ultralytics'
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    settings.update({'weights_dir': str(cache_dir)})
+    
     model = YOLO(model_path)
     results = model.val(data=data_yaml_path)
     return results
@@ -108,7 +118,7 @@ def predict_on_test_set(model_path, test_images_path, output_path):
 
 if __name__ == "__main__":
     # Configuration
-    DATA_YAML = r"C:\Users\alexa\Desktop\Projects\YoloV8-Segmentation\yolo_dataset\data.yaml"
+    DATA_YAML = "./yolo_dataset/data.yaml"
     MODEL_SIZE = 'n'  # nano model
     EPOCHS = 100
     BATCH_SIZE = 16
