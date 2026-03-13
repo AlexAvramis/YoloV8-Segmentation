@@ -1,4 +1,4 @@
-from ultralytics import YOLO, settings
+from ultralytics import YOLO
 import torch
 from pathlib import Path
 
@@ -19,11 +19,6 @@ def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
 
-    # Configure Ultralytics to use a project-local weights directory
-    weights_dir = Path.cwd() / 'weights'
-    weights_dir.mkdir(exist_ok=True)
-    settings.update({'weights_dir': str(weights_dir)})
-
     # Load model
     model_name = f'yolov8{model_size}-seg.pt'
     model = YOLO(model_name)
@@ -36,7 +31,7 @@ def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_
         'imgsz': 640,  # Input image size
         'device': device,
         'workers': 4,  # Number of worker threads
-        'project': 'yolov8_segmentation',
+        'project': '../../YoloV8-Segmentation/runs', # Save results in project directory
         'name': f'davis_yolov8{model_size}_seg',
         'save': True,
         'save_period': 10,  # Save checkpoint every 10 epochs
@@ -57,7 +52,7 @@ def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_
         'overlap_mask': True,  # Masks should overlap during training
         'mask_ratio': 4,  # Mask downsample ratio
         'dropout': 0.0,
-        'val': True,  # Enable validation during training
+        'val': False,  # Disable validation during training ,we will validate separately after training
         'plots': plots,  # Save plots during training
     }
 
@@ -78,11 +73,6 @@ def validate_model(model_path, data_yaml_path):
         model_path (str): Path to trained model weights
         data_yaml_path (str): Path to data.yaml file
     """
-    # Configure Ultralytics cache directory
-    weights_dir = Path.cwd() / 'weights'
-    weights_dir.mkdir(exist_ok=True)
-    settings.update({'weights_dir': str(weights_dir)})
-    
     model = YOLO(model_path)
     results = model.val(data=data_yaml_path)
     return results
