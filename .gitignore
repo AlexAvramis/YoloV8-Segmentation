@@ -32,13 +32,13 @@ wheels/
 *.swp
 *.swo
 *~
-.DS_Store
 
 # Datasets
 DAVIS/
 yolo_dataset/
 
 # Training outputs
+yolov8_segmentation/
 runs/
 weights/
 *.pt
@@ -48,7 +48,6 @@ lightning_logs/
 # Cache
 .cache/
 *.cache
-.cache/
 
 # Logs
 *.log
@@ -63,10 +62,6 @@ logs/
 .DS_Store
 Thumbs.db
 *.bak
-
-# Model weights
-*.pt
-weights/
 
 # Experimental
 experiments/

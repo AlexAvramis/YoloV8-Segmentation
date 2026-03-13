@@ -1,9 +1,7 @@
-import os
 import cv2
 import numpy as np
 from pathlib import Path
 import yaml
-from sklearn.model_selection import train_test_split
 import shutil
 
 def create_yolo_segmentation_format(davis_path, output_path, split='train', year='2017'):
@@ -13,7 +11,7 @@ def create_yolo_segmentation_format(davis_path, output_path, split='train', year
     Args:
         davis_path (str): Path to DAVIS dataset root
         output_path (str): Path to output YOLO format dataset
-        split (str): Which DAVIS split to convert ('train', 'val', 'test')
+        split (str): Which DAVIS split to convert (typically 'train' or 'val')
         year (str): DAVIS year ('2016', '2017')
     """
 
@@ -99,30 +97,31 @@ def create_yolo_segmentation_format(davis_path, output_path, split='train', year
                     contours, _ = cv2.findContours(obj_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
                     if contours:
-                        # Take the largest contour
-                        contour = max(contours, key=cv2.contourArea)
-
-                        # Convert to YOLO format (normalized coordinates)
                         height, width = mask.shape
-                        contour = contour.flatten()
 
-                        # Convert to normalized coordinates
-                        normalized_contour = []
-                        for i in range(0, len(contour), 2):
-                            x = contour[i] / width
-                            y = contour[i+1] / height
-                            normalized_contour.extend([x, y])
+                        # Write each contour as a separate segmentation entry
+                        for contour in contours:
+                            flat = contour.flatten()
 
-                        # Write to file: class_id x1 y1 x2 y2 ... xn yn
-                        if len(normalized_contour) >= 6:  # At least 3 points (6 coordinates)
-                            line = f"0 {' '.join(map(str, normalized_contour))}\n"
-                            f.write(line)
+                            # Convert to normalized coordinates
+                            normalized_contour = []
+                            for i in range(0, len(flat), 2):
+                                x = flat[i] / width
+                                y = flat[i+1] / height
+                                normalized_contour.extend([x, y])
 
-def create_data_yaml(output_path, classes=['object']):
+                            # At least 3 points (6 coordinates)
+                            if len(normalized_contour) >= 6:
+                                line = f"0 {' '.join(map(str, normalized_contour))}\n"
+                                f.write(line)
+
+def create_data_yaml(output_path, classes=None):
     """
     Create data.yaml file for YOLOv8 training
     """
     # Paths should be relative to the data.yaml file location
+    if classes is None:
+        classes = ['object']
 
     data = {
         'train': 'images/train',
@@ -137,47 +136,6 @@ def create_data_yaml(output_path, classes=['object']):
 
     print(f"Created data.yaml at {yaml_path}")
 
-def split_train_val(output_path, val_split=0.2):
-    """
-    Split training data into train and validation sets
-    """
-    images_train = Path(output_path) / 'images' / 'train'
-    labels_train = Path(output_path) / 'labels' / 'train'
-
-    images_val = Path(output_path) / 'images' / 'val'
-    labels_val = Path(output_path) / 'labels' / 'val'
-
-    images_val.mkdir(parents=True, exist_ok=True)
-    labels_val.mkdir(parents=True, exist_ok=True)
-
-    # Get all image files
-    image_files = list(images_train.glob('*.jpg'))
-    image_names = [f.stem for f in image_files]
-
-    if len(image_names) < 2:
-        print(f"Warning: Only {len(image_names)} images in train set. Skipping train/val split.")
-        print("Make sure the DAVIS dataset was properly converted.")
-        return
-
-    # Split
-    train_names, val_names = train_test_split(image_names, test_size=val_split, random_state=42)
-
-    # Move validation files
-    for name in val_names:
-        # Move image
-        src_img = images_train / f"{name}.jpg"
-        dst_img = images_val / f"{name}.jpg"
-        if src_img.exists():
-            shutil.move(src_img, dst_img)
-
-        # Move label
-        src_label = labels_train / f"{name}.txt"
-        dst_label = labels_val / f"{name}.txt"
-        if src_label.exists():
-            shutil.move(src_label, dst_label)
-
-    print(f"Split complete: {len(train_names)} train, {len(val_names)} val")
-
 if __name__ == "__main__":
     # Configuration - using relative paths for GitHub compatibility
     DAVIS_PATH = "./DAVIS"
@@ -187,9 +145,9 @@ if __name__ == "__main__":
     print("Converting DAVIS train split to YOLO format...")
     create_yolo_segmentation_format(DAVIS_PATH, OUTPUT_PATH, split='train')
 
-    # Split into train/val
-    print("Splitting train data into train/val sets...")
-    split_train_val(OUTPUT_PATH, val_split=0.2)
+    # Convert val split
+    print("Converting DAVIS val split to YOLO format...")
+    create_yolo_segmentation_format(DAVIS_PATH, OUTPUT_PATH, split='val')
 
     # Create data.yaml
     print("Creating data.yaml...")

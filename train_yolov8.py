@@ -1,9 +1,8 @@
 from ultralytics import YOLO, settings
 import torch
-import os
 from pathlib import Path
 
-def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_size=16, cache='true'):
+def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_size=16, cache='true', plots=False):
     """
     Train YOLOv8 segmentation model on DAVIS dataset
 
@@ -13,6 +12,7 @@ def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_
         epochs (int): Number of training epochs
         batch_size (int): Batch size for training
         cache (str|bool): Whether to cache images for faster training. Can be 'true', 'false', or 'disk'.
+        plots (bool): Whether to save training plots. Disable if matplotlib/Pillow plotting crashes.
     """
 
     # Check if CUDA is available
@@ -57,8 +57,8 @@ def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_
         'overlap_mask': True,  # Masks should overlap during training
         'mask_ratio': 4,  # Mask downsample ratio
         'dropout': 0.0,
-        'val': True,
-        'plots': True,  # Save plots during training
+        'val': True,  # Enable validation during training
+        'plots': plots,  # Save plots during training
     }
 
     # Start training

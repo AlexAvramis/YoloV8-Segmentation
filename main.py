@@ -2,11 +2,10 @@
 Main orchestration script for YOLOv8 DAVIS segmentation training pipeline
 """
 
-import os
 import sys
 import argparse
 from pathlib import Path
-from convert_davis_to_yolo import create_yolo_segmentation_format, create_data_yaml, split_train_val
+from convert_davis_to_yolo import create_yolo_segmentation_format, create_data_yaml
 from train_yolov8 import train_yolov8_segmentation, validate_model
 
 def main():
@@ -24,11 +23,11 @@ def main():
                        help='Number of training epochs')
     parser.add_argument('--batch-size', type=int, default=16,
                        help='Batch size for training')
-    parser.add_argument('--val-split', type=float, default=0.2,
-                       help='Validation split ratio')
     parser.add_argument('--cache', type=str, default='true',
                        choices=['true', 'false', 'disk'],
                        help="Whether to cache images for faster training (true/false/disk). Default: true")
+    parser.add_argument('--plots', action='store_true',
+                       help='Enable Ultralytics training plots (disabled by default to avoid plotting crashes)')
     parser.add_argument('--skip-conversion', action='store_true',
                        help='Skip dataset conversion (dataset already converted)')
     parser.add_argument('--only-conversion', action='store_true',
@@ -54,9 +53,9 @@ def main():
             print("Converting DAVIS train split...")
             create_yolo_segmentation_format(str(davis_path), str(output_path), split='train')
             
-            print("\nSplitting train data into train/validation sets...")
-            split_train_val(str(output_path), val_split=args.val_split)
-            
+            print("Converting DAVIS val split...")
+            create_yolo_segmentation_format(str(davis_path), str(output_path), split='val')
+
             print("\nCreating data.yaml configuration...")
             create_data_yaml(str(output_path))
             
@@ -95,7 +94,8 @@ def main():
             model_size=args.model_size,
             epochs=args.epochs,
             batch_size=args.batch_size,
-            cache=args.cache
+            cache=args.cache,
+            plots=args.plots
         )
 
         print("=" * 60)
