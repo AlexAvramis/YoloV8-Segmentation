@@ -3,7 +3,7 @@ import torch
 import os
 from pathlib import Path
 
-def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_size=16):
+def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_size=16, cache='true'):
     """
     Train YOLOv8 segmentation model on DAVIS dataset
 
@@ -12,16 +12,17 @@ def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_
         model_size (str): Model size ('n', 's', 'm', 'l', 'x' for nano to extra-large)
         epochs (int): Number of training epochs
         batch_size (int): Batch size for training
+        cache (str|bool): Whether to cache images for faster training. Can be 'true', 'false', or 'disk'.
     """
 
     # Check if CUDA is available
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
 
-    # Configure Ultralytics to use a proper cache directory
-    cache_dir = Path.home() / '.cache' / 'ultralytics'
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    settings.update({'weights_dir': str(cache_dir)})
+    # Configure Ultralytics to use a project-local weights directory
+    weights_dir = Path.cwd() / 'weights'
+    weights_dir.mkdir(exist_ok=True)
+    settings.update({'weights_dir': str(weights_dir)})
 
     # Load model
     model_name = f'yolov8{model_size}-seg.pt'
@@ -39,7 +40,7 @@ def train_yolov8_segmentation(data_yaml_path, model_size='n', epochs=100, batch_
         'name': f'davis_yolov8{model_size}_seg',
         'save': True,
         'save_period': 10,  # Save checkpoint every 10 epochs
-        'cache': True,  # Cache images for faster training
+        'cache': cache,  # Cache images for faster training
         'pretrained': True,
         'optimizer': 'AdamW',
         'lr0': 0.001,
@@ -78,9 +79,9 @@ def validate_model(model_path, data_yaml_path):
         data_yaml_path (str): Path to data.yaml file
     """
     # Configure Ultralytics cache directory
-    cache_dir = Path.home() / '.cache' / 'ultralytics'
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    settings.update({'weights_dir': str(cache_dir)})
+    weights_dir = Path.cwd() / 'weights'
+    weights_dir.mkdir(exist_ok=True)
+    settings.update({'weights_dir': str(weights_dir)})
     
     model = YOLO(model_path)
     results = model.val(data=data_yaml_path)
@@ -117,8 +118,9 @@ def predict_on_test_set(model_path, test_images_path, output_path):
     return results
 
 if __name__ == "__main__":
-    # Configuration
-    DATA_YAML = "./yolo_dataset/data.yaml"
+    # Configuration - use absolute path based on script location
+    script_dir = Path(__file__).resolve().parent
+    DATA_YAML = str(script_dir / "yolo_dataset" / "data.yaml")
     MODEL_SIZE = 'n'  # nano model
     EPOCHS = 100
     BATCH_SIZE = 16

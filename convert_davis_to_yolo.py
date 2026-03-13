@@ -122,9 +122,11 @@ def create_data_yaml(output_path, classes=['object']):
     """
     Create data.yaml file for YOLOv8 training
     """
+    # Paths should be relative to the data.yaml file location
+
     data = {
-        'train': str(Path(output_path) / 'images' / 'train'),
-        'val': str(Path(output_path) / 'images' / 'val'),
+        'train': 'images/train',
+        'val': 'images/val',
         'nc': len(classes),
         'names': classes
     }
@@ -177,9 +179,9 @@ def split_train_val(output_path, val_split=0.2):
     print(f"Split complete: {len(train_names)} train, {len(val_names)} val")
 
 if __name__ == "__main__":
-    # Configuration
-    DAVIS_PATH = r"C:\Users\alexa\Desktop\Projects\YoloV8-Segmentation\DAVIS"
-    OUTPUT_PATH = r"C:\Users\alexa\Desktop\Projects\YoloV8-Segmentation\yolo_dataset"
+    # Configuration - using relative paths for GitHub compatibility
+    DAVIS_PATH = "./DAVIS"
+    OUTPUT_PATH = "./yolo_dataset"
 
     # Convert train split
     print("Converting DAVIS train split to YOLO format...")

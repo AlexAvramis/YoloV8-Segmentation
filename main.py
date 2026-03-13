@@ -26,6 +26,9 @@ def main():
                        help='Batch size for training')
     parser.add_argument('--val-split', type=float, default=0.2,
                        help='Validation split ratio')
+    parser.add_argument('--cache', type=str, default='true',
+                       choices=['true', 'false', 'disk'],
+                       help="Whether to cache images for faster training (true/false/disk). Default: true")
     parser.add_argument('--skip-conversion', action='store_true',
                        help='Skip dataset conversion (dataset already converted)')
     parser.add_argument('--only-conversion', action='store_true',
@@ -91,20 +94,21 @@ def main():
             data_yaml_path,
             model_size=args.model_size,
             epochs=args.epochs,
-            batch_size=args.batch_size
+            batch_size=args.batch_size,
+            cache=args.cache
         )
-        
-        print("\n" + "=" * 60)
+
+        print("=" * 60)
         print("Step 3: Validating trained model...")
         print("=" * 60)
-        
+
         best_model_path = str(Path(train_results.save_dir) / 'weights' / 'best.pt')
         if Path(best_model_path).exists():
             val_results = validate_model(best_model_path, data_yaml_path)
             print("✓ Validation complete!")
         else:
             print(f"Warning: Best model weights not found at {best_model_path}")
-        
+
         print("\n" + "=" * 60)
         print("✓ Training pipeline complete!")
         print("=" * 60)
