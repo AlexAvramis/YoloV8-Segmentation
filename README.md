@@ -129,7 +129,7 @@ Typical files:
 ## Notes
 
 - Plot generation is disabled by default to avoid matplotlib/Pillow plotting crashes in some environments.
-- Use --plots only when you want training visualizations.
+- Use --plots only when training visualizations are needed.
 - All DAVIS objects are trained as a single class named object.
 
 ## Troubleshooting
